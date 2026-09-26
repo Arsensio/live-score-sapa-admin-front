@@ -103,3 +103,11 @@ npm.cmd run build
 ```
 
 Тесты подменяют API и не меняют настоящий backend. Проверяются запросы создания турнира и команды, валидация, переход из списка групп, добавление выбранных команд в одну группу, исключение назначенных команд, конфликт 409, подтверждение и запрет сброса FINISHED. Реальная интеграция требует адреса backend и подтверждения отмеченных контрактов.
+
+## Docker image в GHCR
+
+Создайте repository variable `VITE_BACKEND_URL` в GitHub: **Settings → Secrets and variables → Actions → Variables → New repository variable**. Укажите origin backend без `/api` и `/image`; переменная используется во время Vite build. Не добавляйте сюда секреты.
+
+Сборка и публикация запускаются автоматически при push в `main`. Для ручного запуска откройте **Actions → Build and push frontend image → Run workflow**.
+
+Публикуется `ghcr.io/arsensio/live-score-frontend` с тегами `latest` и коротким Git commit SHA, например `ghcr.io/arsensio/live-score-frontend:latest` и `ghcr.io/arsensio/live-score-frontend:1a2b3c4`.
