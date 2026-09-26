@@ -21,7 +21,7 @@ VITE_BACKEND_URL=http://localhost:8091
 
 В режиме `npm.cmd run dev` браузер отправляет запросы на `/api` и `/image` своего origin. Прокси в `vite.config.ts` перенаправляет их на `VITE_BACKEND_URL`, поэтому настройка CORS на backend для локальной разработки не требуется. В Network браузера будет виден порт фронтенда — это ожидаемо.
 
-В production прокси Vite не работает: настройте reverse proxy для `/api` и `/image` и оставьте `VITE_BACKEND_URL` пустой либо разрешите origin фронтенда в CORS на backend вместе с credentials. Клиент отправляет cookies (`credentials: include`). Endpoint входа и проверки сессии не предоставлен; авторизация не реализована, 401/403 показываются пользователю.
+В production значение `VITE_BACKEND_URL` задаётся в окружении контейнера при запуске; конфиг генерируется Nginx при старте, поэтому ссылку можно менять без пересборки image. Если переменная пустая, настройте reverse proxy для `/api` и `/image` либо разрешите origin фронтенда в CORS на backend вместе с credentials. Клиент отправляет cookies (`credentials: include`). Endpoint входа и проверки сессии не предоставлен; авторизация не реализована, 401/403 показываются пользователю.
 
 ## Архитектура
 
@@ -103,11 +103,8 @@ npm.cmd run build
 ```
 
 Тесты подменяют API и не меняют настоящий backend. Проверяются запросы создания турнира и команды, валидация, переход из списка групп, добавление выбранных команд в одну группу, исключение назначенных команд, конфликт 409, подтверждение и запрет сброса FINISHED. Реальная интеграция требует адреса backend и подтверждения отмеченных контрактов.
-
 ## Docker image в GHCR
 
-Создайте repository variable `VITE_BACKEND_URL` в GitHub: **Settings → Secrets and variables → Actions → Variables → New repository variable**. Укажите origin backend без `/api` и `/image`; переменная используется во время Vite build. Не добавляйте сюда секреты.
+Сборка и публикация запускаются автоматически при push в `main`. Для ручного запуска откройте **Actions → Build and push frontend image → Run workflow**. Workflow публикует `ghcr.io/arsensio/live-score-frontend` с тегами `latest` и коротким Git commit SHA.
 
-Сборка и публикация запускаются автоматически при push в `main`. Для ручного запуска откройте **Actions → Build and push frontend image → Run workflow**.
-
-Публикуется `ghcr.io/arsensio/live-score-frontend` с тегами `latest` и коротким Git commit SHA, например `ghcr.io/arsensio/live-score-frontend:latest` и `ghcr.io/arsensio/live-score-frontend:1a2b3c4`.
+Чтобы изменить backend URL без пересборки, задайте `VITE_BACKEND_URL` в окружении контейнера при запуске, например `-e VITE_BACKEND_URL=https://api.example.com`. Укажите origin без `/api` и `/image`. В Kubernetes задайте эту переменную в `env` контейнера Deployment; GitHub repository variable для неё больше не требуется.

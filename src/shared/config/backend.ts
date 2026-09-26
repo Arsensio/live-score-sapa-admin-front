@@ -1,9 +1,7 @@
-const configured = import.meta.env.VITE_BACKEND_URL?.trim();
-// Development requests use Vite's same-origin /api proxy. Its target comes
-// from the same VITE_BACKEND_URL variable in vite.config.ts.
-// Production uses the configured address, or the frontend origin if empty.
-export const backendUrl = import.meta.env.DEV
+// Development uses Vite's same-origin /api proxy. Production reads the
+// container-generated config, so the backend can change without rebuilding.
+const configured = import.meta.env.DEV
   ? ""
-  : configured
-    ? configured.replace(/\/+$/, "")
-    : "";
+  : window.__APP_CONFIG__?.VITE_BACKEND_URL?.trim() ?? "";
+
+export const backendUrl = configured.replace(/\/+$/, "");
