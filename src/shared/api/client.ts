@@ -32,6 +32,7 @@ export async function api<T>(path: string, options: Options = {}): Promise<T> {
       method: options.method ?? "GET",
       signal: options.signal,
       credentials: "include",
+      cache: path.startsWith("/api/auth/") ? "no-store" : undefined,
       headers: {
         Accept: "application/json",
         ...(!options.skipAuth && getAccessToken()

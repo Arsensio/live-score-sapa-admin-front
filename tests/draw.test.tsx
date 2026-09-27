@@ -22,6 +22,16 @@ const teams = ["1", "2", "3"].map((id) => ({
   logoUrl: null,
   players: [],
 }));
+const groupTeams = teams.map(team => ({
+  groupTeamId: 'membership-' + team.id,
+  teamId: team.id,
+  teamName: team.name,
+  teamShortName: team.shortName,
+  teamLogoUrl: team.logoUrl,
+  statisticsId: 'statistics-' + team.id,
+  gamePlayed: 1, winCount: 1, drawCount: 0, loseCount: 0,
+  goalCount: 3, goalMissed: 1, goalDifference: 2, points: 3, isLive: true,
+}));
 const groups = [
   {
     id: "a",
@@ -37,7 +47,7 @@ const groups = [
     status: "IN_PROGRESS" as const,
     groupOrder: 2,
     isPlayOff: false,
-    teams: [teams[2]],
+    teams: [groupTeams[2]],
   },
 ];
 function open(url = "/tournaments/cup/draw") {
@@ -133,7 +143,7 @@ describe("жеребьевка внутри группы", () => {
   it("отправляет только отмеченные команды в открытую группу и перечитывает состав", async () => {
     vi.mocked(submitDraw).mockImplementation(async () => {
       vi.mocked(groupApi.list).mockResolvedValue([
-        { ...groups[0], status: "IN_PROGRESS", teams: [teams[1]] },
+        { ...groups[0], status: "IN_PROGRESS", teams: [groupTeams[1]] },
         groups[1],
       ]);
     });
@@ -183,7 +193,7 @@ describe("жеребьевка внутри группы", () => {
   });
   it("разрешает дополнять IN_PROGRESS, исключая уже назначенные команды", async () => {
     vi.mocked(groupApi.list).mockResolvedValue([
-      { ...groups[0], status: "IN_PROGRESS", teams: [teams[0]] },
+      { ...groups[0], status: "IN_PROGRESS", teams: [groupTeams[0]] },
       groups[1],
     ]);
     const user = userEvent.setup();
@@ -266,7 +276,7 @@ describe("жеребьевка внутри группы", () => {
   });
   it("сбрасывает только открытую группу после подтверждения", async () => {
     vi.mocked(groupApi.list).mockResolvedValue([
-      { ...groups[0], teams: [teams[0]] },
+      { ...groups[0], teams: [groupTeams[0]] },
       groups[1],
     ]);
     vi.mocked(groupApi.reset).mockImplementation(async () => {

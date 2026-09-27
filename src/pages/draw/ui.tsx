@@ -65,7 +65,15 @@ function DrawWorkspace({
             throw new Error(
               "Сервер не вернул состав группы. Обновите данные перед жеребьевкой.",
             );
-          return { group, teams: group.teams };
+          return {
+            group,
+            teams: group.teams.map((team) => ({
+              id: team.teamId,
+              name: team.teamName,
+              shortName: team.teamShortName,
+              logoUrl: team.teamLogoUrl,
+            })),
+          };
         });
         memberships.sort(
           (a, b) =>

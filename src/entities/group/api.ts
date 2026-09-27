@@ -13,7 +13,7 @@ export const groupApi = {
     }),
   list: (tournamentId: string, status?: GroupStatus, signal?: AbortSignal) =>
     allPages((page) =>
-      api<Collection<Group>>("/api/groups/filter", {
+      api<Collection<GroupWithStatistics>>("/api/groups/filter", {
         query: { tournamentId, status, page, size: 100 },
         signal,
       }),

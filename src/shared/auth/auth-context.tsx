@@ -4,6 +4,7 @@ import {
   useContext,
   useEffect,
   useMemo,
+  useRef,
   useState,
   type ReactNode,
 } from "react";
@@ -18,7 +19,7 @@ export type User = {
   role: "ADMIN" | "USER" | string;
 };
 type AuthResponse = { accessToken: string; user: User };
-type AuthStatus = "loading" | "anonymous" | "authenticated" | "denied";
+type AuthStatus = "loading" | "anonymous" | "authenticated" | "denied" | "restore-error";
 type AuthContextValue = {
   status: AuthStatus;
   user: User | null;
@@ -30,7 +31,7 @@ type AuthContextValue = {
 
 const AuthContext = createContext<AuthContextValue | null>(null);
 const NO_ACCESS = "У вас нет доступа к административной панели";
-let restoreRequest: Promise<AuthResponse | null> | null = null;
+
 
 async function logoutRequest() {
   const csrf = await csrfToken();
@@ -39,22 +40,6 @@ async function logoutRequest() {
     skipAuth: true,
     headers: { "X-XSRF-TOKEN": csrf },
   });
-}
-
-async function restoreSession(): Promise<AuthResponse | null> {
-  if (!restoreRequest) {
-    restoreRequest = (async () => {
-      const accessToken = await refreshAccessToken();
-      const user = await api<User>("/api/auth/me", {
-        skipAuth: true,
-        headers: { Authorization: `Bearer ${accessToken}` },
-      });
-      return { accessToken, user };
-    })().finally(() => {
-      restoreRequest = null;
-    });
-  }
-  return restoreRequest;
 }
 
 function userMessage(error: unknown) {
@@ -67,6 +52,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [status, setStatus] = useState<AuthStatus>("loading");
   const [user, setUser] = useState<User | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [restoreRevision, setRestoreRevision] = useState(0);
+  const restoredToken = useRef<string | null>(null);
+  const retryRestore = useCallback(() => setRestoreRevision(value => value + 1), []);
 
   const rejectNonAdmin = useCallback(async () => {
     setAccessToken(null);
@@ -82,33 +70,54 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     let active = true;
-    restoreSession()
-      .then(async (session) => {
+    let timer: ReturnType<typeof setTimeout> | undefined;
+    let attempts = 0;
+    setStatus("loading");
+    setError(null);
+    const restore = async () => {
+      try {
+        const token = restoredToken.current ?? await refreshAccessToken();
         if (!active) return;
-        if (!session) {
-          setStatus("anonymous");
-        } else if (session.user.role === "ADMIN") {
-          setAccessToken(session.accessToken);
-          setUser(session.user);
-          setStatus("authenticated");
-        } else {
+        restoredToken.current = token;
+        const profile = await api<User>("/api/auth/me", {
+          skipAuth: true,
+          headers: { Authorization: `Bearer ${token}` },
+        });
+        if (!active) return;
+        if (profile.role !== "ADMIN") {
+          restoredToken.current = null;
           await rejectNonAdmin();
+          return;
         }
-      })
-      .catch((reason: unknown) => {
+        setAccessToken(token);
+        setUser(profile);
+        setStatus("authenticated");
+      } catch (reason) {
         if (!active) return;
-        setAccessToken(null);
         if (reason instanceof ApiError && reason.status === 401) {
+          restoredToken.current = null;
+          setAccessToken(null);
+          setUser(null);
           setStatus("anonymous");
-        } else {
-          setStatus("anonymous");
-          setError("Не удалось проверить сессию. Войдите ещё раз.");
+          return;
         }
-      });
-    return () => {
-      active = false;
+        if (++attempts < 3) {
+          timer = setTimeout(() => void restore(), attempts * 1000);
+          return;
+        }
+        setError("Не удалось восстановить соединение. Проверьте интернет и попробуйте ещё раз.");
+        setStatus("restore-error");
+      }
     };
-  }, [rejectNonAdmin]);
+    void restore();
+    return () => { active = false; clearTimeout(timer); };
+  }, [rejectNonAdmin, restoreRevision]);
+
+  useEffect(() => {
+    if (status !== "restore-error") return;
+    window.addEventListener("online", retryRestore);
+    return () => window.removeEventListener("online", retryRestore);
+  }, [status, retryRestore]);
 
   const signInWithGoogle = useCallback(async (idToken: string) => {
     setError(null);
@@ -140,6 +149,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, [rejectNonAdmin]);
 
   const logout = useCallback(async () => {
+    restoredToken.current = null;
     setAccessToken(null);
     setUser(null);
     setStatus("anonymous");
@@ -162,7 +172,17 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }),
     [status, user, error, signInWithGoogle, logout],
   );
-  return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
+  return <AuthContext.Provider value={value}>
+    {status === "loading" ? (
+      <main className="auth-loading" role="status">Восстанавливаем сессию…</main>
+    ) : status === "restore-error" ? (
+      <main className="login-page"><section className="login-card">
+        <h1>Восстановление соединения</h1>
+        <p role="alert">{error}</p>
+        <button type="button" className="button primary" onClick={retryRestore}>Повторить</button>
+      </section></main>
+    ) : children}
+  </AuthContext.Provider>;
 }
 
 export function useAuth() {
