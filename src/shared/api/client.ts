@@ -1,4 +1,5 @@
-import { backendUrl } from "../config/backend";
+import { apiBaseUrl } from "../config/backend";
+import { getAccessToken } from "../auth/access-token";
 
 export class ApiError extends Error {
   constructor(
@@ -15,9 +16,11 @@ type Options = {
   body?: unknown;
   query?: Record<string, string | number | undefined>;
   signal?: AbortSignal;
+  headers?: Record<string, string>;
+  skipAuth?: boolean;
 };
 export async function api<T>(path: string, options: Options = {}): Promise<T> {
-  const url = new URL(`${backendUrl}${path}`, window.location.origin);
+  const url = new URL(`${apiBaseUrl}${path}`, window.location.origin);
   Object.entries(options.query ?? {}).forEach(([key, value]) => {
     if (value !== undefined && value !== "")
       url.searchParams.set(key, String(value));
@@ -30,6 +33,10 @@ export async function api<T>(path: string, options: Options = {}): Promise<T> {
       credentials: "include",
       headers: {
         Accept: "application/json",
+        ...(!options.skipAuth && getAccessToken()
+          ? { Authorization: `Bearer ${getAccessToken()}` }
+          : {}),
+        ...options.headers,
         ...(options.body === undefined || options.body instanceof FormData
           ? {}
           : { "Content-Type": "application/json" }),
@@ -79,7 +86,7 @@ export async function api<T>(path: string, options: Options = {}): Promise<T> {
   if (text && payload === undefined)
     throw new ApiError(
       response.status,
-      "Сервер вернул ответ не в формате JSON. Проверьте VITE_BACKEND_URL.",
+      "Сервер вернул ответ не в формате JSON. Проверьте адрес API.",
     );
   return payload as T;
 }

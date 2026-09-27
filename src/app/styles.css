@@ -196,6 +196,101 @@ fieldset:disabled {
 @media (prefers-reduced-motion: reduce) {
   .match-score-status.is-live .status-live::before { animation: none; }
 }
+.login-page,
+.auth-loading {
+  min-height: 100vh;
+  display: grid;
+  place-items: center;
+  padding: 24px;
+  background: #f5f7f5;
+}
+.login-card {
+  width: min(100%, 440px);
+  padding: 40px 32px;
+  display: grid;
+  justify-items: center;
+  gap: 16px;
+  background: #fff;
+  border: 1px solid #e2e9e4;
+  border-radius: 18px;
+  box-shadow: 0 18px 55px rgb(22 49 37 / 8%);
+  text-align: center;
+}
+.login-mark {
+  width: 48px;
+  height: 48px;
+  display: grid;
+  place-items: center;
+  border-radius: 14px;
+  color: #fff;
+  background: #163d2d;
+  font-size: 24px;
+  font-weight: 800;
+}
+.login-eyebrow {
+  color: #708278;
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 2px;
+}
+.login-card h1 {
+  font-size: 25px;
+}
+.login-description {
+  max-width: 340px;
+  color: #68786f;
+}
+.google-login-slot {
+  width: 100%;
+  min-height: 44px;
+  display: flex;
+  justify-content: center;
+  margin-top: 6px;
+}
+.google-login-slot iframe {
+  max-width: 100%;
+}
+.login-error {
+  color: #a53131;
+  font-size: 14px;
+}
+.login-status {
+  color: #63766c;
+  font-size: 14px;
+}
+.account-controls {
+  margin-left: auto;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+.account-name {
+  max-width: 200px;
+  overflow: hidden;
+  color: #718078;
+  font-size: 13px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.logout-button {
+  border: 1px solid #dce4de;
+  border-radius: 8px;
+  padding: 7px 12px;
+  color: #294638;
+  background: #fff;
+  font-size: 13px;
+}
+.logout-button:hover {
+  background: #f2f6f3;
+}
+@media (max-width: 720px) {
+  .account-controls {
+    gap: 7px;
+  }
+  .account-name {
+    display: none;
+  }
+}
 .full-width {
   width: 100%;
 }

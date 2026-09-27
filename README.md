@@ -14,14 +14,15 @@ npm.cmd run dev
 ```
 
 ```dotenv
-VITE_BACKEND_URL=http://localhost:8091
+VITE_API_BASE_URL=http://localhost:8093
+VITE_GOOGLE_CLIENT_ID=<Google OAuth Client ID>
 ```
 
-Адрес без `/api`: префикс включён в endpoints. Единая конфигурация — `src/shared/config/backend.ts`. Пустая переменная означает origin фронтенда (reverse proxy). `.env` и `.env.local` исключены из git. После изменения переменной перезапустите Vite; production нужно пересобрать. Переменные `VITE_*` публичны, не храните в них секреты.
+Задайте `VITE_API_BASE_URL` как origin User Service/Gateway без `/api`: пути API уже включают этот префикс. `VITE_GOOGLE_CLIENT_ID` — публичный OAuth Client ID из Google Cloud; Google Client Secret нельзя помещать во frontend. В dev используйте `.env`; файлы `.env` исключены из git. В Docker production обе переменные задаются в окружении контейнера при запуске, без пересборки image.
 
-В режиме `npm.cmd run dev` браузер отправляет запросы на `/api` и `/image` своего origin. Прокси в `vite.config.ts` перенаправляет их на `VITE_BACKEND_URL`, поэтому настройка CORS на backend для локальной разработки не требуется. В Network браузера будет виден порт фронтенда — это ожидаемо.
+В режиме `npm.cmd run dev` Vite proxy направляет запросы `/api` и `/image` на `VITE_API_BASE_URL`.
 
-В production значение `VITE_BACKEND_URL` задаётся в окружении контейнера при запуске; конфиг генерируется Nginx при старте, поэтому ссылку можно менять без пересборки image. Если переменная пустая, настройте reverse proxy для `/api` и `/image` либо разрешите origin фронтенда в CORS на backend вместе с credentials. Клиент отправляет cookies (`credentials: include`). Endpoint входа и проверки сессии не предоставлен; авторизация не реализована, 401/403 показываются пользователю.
+В production `VITE_API_BASE_URL` и `VITE_GOOGLE_CLIENT_ID` задаются в окружении контейнера. Runtime-конфиг генерируется Nginx при старте, поэтому адрес Gateway и Client ID можно менять без пересборки image. Backend должен разрешать credentials для origin фронтенда.
 
 ## Архитектура
 
@@ -29,7 +30,7 @@ VITE_BACKEND_URL=http://localhost:8091
 - `src/pages/<page>` — UI, формы, схемы и специфичные операции страниц.
 - `src/entities/tournament`, `team`, `group` — общие сущности, типы, статусы и запросы.
 - `src/shared/api` — единый HTTP-клиент, ошибки, пагинация, отмена запросов.
-- `src/shared/config/backend.ts` — адрес из `VITE_BACKEND_URL`.
+- `src/shared/config/backend.ts` — адрес API из `VITE_API_BASE_URL`.
 - `src/shared/ui` — общие формы, статусы, загрузка, ошибки и confirmation dialog.
 - `src/shared/lib` — общая валидация.
 - `tests` — проверки HTTP-инфраструктуры, форм и пользовательских сценариев.
@@ -102,9 +103,10 @@ npm.cmd test
 npm.cmd run build
 ```
 
-Тесты подменяют API и не меняют настоящий backend. Проверяются запросы создания турнира и команды, валидация, переход из списка групп, добавление выбранных команд в одну группу, исключение назначенных команд, конфликт 409, подтверждение и запрет сброса FINISHED. Реальная интеграция требует адреса backend и подтверждения отмеченных контрактов.
+Тесты подменяют API и не меняют настоящий backend. Проверяются запросы создания турнира и команды, валидация и пользовательские сценарии.
+
 ## Docker image в GHCR
 
 Сборка и публикация запускаются автоматически при push в `main`. Для ручного запуска откройте **Actions → Build and push frontend image → Run workflow**. Workflow публикует `ghcr.io/arsensio/live-score-frontend` с тегами `latest` и коротким Git commit SHA.
 
-Чтобы изменить backend URL без пересборки, задайте `VITE_BACKEND_URL` в окружении контейнера при запуске, например `-e VITE_BACKEND_URL=https://api.example.com`. Укажите origin без `/api` и `/image`. В Kubernetes задайте эту переменную в `env` контейнера Deployment; GitHub repository variable для неё больше не требуется.
+Для входа через Google задайте публичный `VITE_GOOGLE_CLIENT_ID`. Приложение принимает только пользователей с ролью `ADMIN`; роль определяется backend, а не выбирается в интерфейсе. В Kubernetes задайте `VITE_API_BASE_URL` и `VITE_GOOGLE_CLIENT_ID` в `env` контейнера Deployment.

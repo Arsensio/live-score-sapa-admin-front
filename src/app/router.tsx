@@ -17,6 +17,17 @@ import { DrawPage } from "../pages/draw/ui";
 import { MatchPage } from "../pages/match/ui";
 import { PlayerStatisticsPage } from "../pages/player-statistics/ui";
 import { ErrorNotice, PageHeading } from "../shared/ui";
+import { useAuth } from "../shared/auth/auth-context";
+import { LoginPage } from "../pages/login/ui";
+import type { ReactNode } from "react";
+
+function RequireAdmin({ children }: { children: ReactNode }) {
+  const { status } = useAuth();
+  if (status === "loading")
+    return <main className="auth-loading" role="status">Проверяем сессию…</main>;
+  if (status !== "authenticated") return <Navigate to="/login" replace />;
+  return children;
+}
 function RouteError() {
   const error = useRouteError();
   return (
@@ -30,8 +41,9 @@ function RouteError() {
   );
 }
 export const router = createBrowserRouter([
+  { path: "/login", element: <LoginPage /> },
   {
-    element: <Layout />,
+    element: <RequireAdmin><Layout /></RequireAdmin>,
     errorElement: <RouteError />,
     children: [
       { path: "/", element: <Navigate to="/tournaments" replace /> },

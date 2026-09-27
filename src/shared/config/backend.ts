@@ -1,7 +1,7 @@
-// Development uses Vite's same-origin /api proxy. Production reads the
-// container-generated config, so the backend can change without rebuilding.
+// Development uses Vite's same-origin proxy. Production reads the container
+// config, allowing the API host to change without rebuilding the image.
 const configured = import.meta.env.DEV
   ? ""
-  : window.__APP_CONFIG__?.VITE_BACKEND_URL?.trim() ?? "";
+  : window.__APP_CONFIG__?.VITE_API_BASE_URL?.trim() ?? "";
 
-export const backendUrl = configured.replace(/\/+$/, "");
+export const apiBaseUrl = configured.replace(/\/+$/, "");
