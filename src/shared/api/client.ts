@@ -18,6 +18,7 @@ type Options = {
   signal?: AbortSignal;
   headers?: Record<string, string>;
   skipAuth?: boolean;
+  allowTextResponse?: boolean;
 };
 export async function api<T>(path: string, options: Options = {}): Promise<T> {
   const url = new URL(`${apiBaseUrl}${path}`, window.location.origin);
@@ -61,7 +62,7 @@ export async function api<T>(path: string, options: Options = {}): Promise<T> {
   try {
     payload = text ? JSON.parse(text) : undefined;
   } catch {
-    payload = undefined;
+    payload = options.allowTextResponse ? text : undefined;
   }
   if (!response.ok) {
     const defaults: Record<number, string> = {

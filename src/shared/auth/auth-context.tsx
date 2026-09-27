@@ -9,6 +9,7 @@ import {
 } from "react";
 import { ApiError, api } from "../api/client";
 import { setAccessToken } from "./access-token";
+import { csrfToken, refreshAccessToken } from "./session";
 
 export type User = {
   id: string;
@@ -31,49 +32,24 @@ const AuthContext = createContext<AuthContextValue | null>(null);
 const NO_ACCESS = "У вас нет доступа к административной панели";
 let restoreRequest: Promise<AuthResponse | null> | null = null;
 
-function readCsrfCookie() {
-  const item = document.cookie
-    .split(";")
-    .map((part) => part.trim())
-    .find((part) => part.startsWith("XSRF-TOKEN="));
-  if (!item) return "";
-  try {
-    return decodeURIComponent(item.slice("XSRF-TOKEN=".length));
-  } catch {
-    return item.slice("XSRF-TOKEN=".length);
-  }
-}
-
-async function csrfToken() {
-  const response = await api<{ csrfToken?: string; token?: string }>(
-    "/api/auth/csrf",
-    { skipAuth: true },
-  );
-  return response?.csrfToken || response?.token || readCsrfCookie();
-}
-
-async function logoutRequest(token?: string) {
-  const csrf = token || (await csrfToken());
+async function logoutRequest() {
+  const csrf = await csrfToken();
   await api<void>("/api/auth/logout", {
     method: "POST",
     skipAuth: true,
-    headers: csrf ? { "X-XSRF-TOKEN": csrf } : {},
+    headers: { "X-XSRF-TOKEN": csrf },
   });
 }
 
 async function restoreSession(): Promise<AuthResponse | null> {
   if (!restoreRequest) {
     restoreRequest = (async () => {
-      const csrf = await csrfToken();
-      const response = await api<AuthResponse>("/api/auth/refresh", {
-        method: "POST",
+      const accessToken = await refreshAccessToken();
+      const user = await api<User>("/api/auth/me", {
         skipAuth: true,
-        headers: csrf ? { "X-XSRF-TOKEN": csrf } : {},
+        headers: { Authorization: `Bearer ${accessToken}` },
       });
-      if (!response?.accessToken || !response.user) return null;
-      setAccessToken(response.accessToken);
-      const user = await api<User>("/api/auth/me");
-      return { ...response, user };
+      return { accessToken, user };
     })().finally(() => {
       restoreRequest = null;
     });
@@ -112,6 +88,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         if (!session) {
           setStatus("anonymous");
         } else if (session.user.role === "ADMIN") {
+          setAccessToken(session.accessToken);
           setUser(session.user);
           setStatus("authenticated");
         } else {
@@ -119,8 +96,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         }
       })
       .catch((reason: unknown) => {
-        setAccessToken(null);
         if (!active) return;
+        setAccessToken(null);
         if (reason instanceof ApiError && reason.status === 401) {
           setStatus("anonymous");
         } else {
@@ -163,13 +140,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, [rejectNonAdmin]);
 
   const logout = useCallback(async () => {
-    const token = readCsrfCookie();
     setAccessToken(null);
     setUser(null);
     setStatus("anonymous");
     setError(null);
     try {
-      await logoutRequest(token);
+      await logoutRequest();
     } catch {
       setError("Не удалось завершить сессию. Попробуйте ещё раз.");
     }
