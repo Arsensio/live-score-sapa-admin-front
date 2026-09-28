@@ -55,6 +55,37 @@ export type MatchPage = {
   empty: boolean;
 };
 
+export type MatchGroup = {
+  groupId: string | null;
+  groupName: string | null;
+  groupOrder: number | null;
+  isPlayOff: boolean | null;
+  matches: Match[];
+};
+
+export type MatchTournament = {
+  id: string;
+  name: string;
+  description: string | null;
+  logoUrl: string | null;
+  status: string;
+  startDate: string | null;
+  endDate: string | null;
+  maxTeams: number;
+  type: string;
+  createdAt: string;
+  updatedAt: string;
+};
+
+export type MatchGroupsPageResponse = {
+  tournament: MatchTournament;
+  groups: MatchGroup[];
+};
+
+export type MatchGroupsPage = Omit<MatchPage, "content" | "pageNumber" | "pageSize"> & {
+  content: MatchGroupsPageResponse[];
+};
+
 export type CreateMatchInput = {
   groupId: string;
   teamId1: string;

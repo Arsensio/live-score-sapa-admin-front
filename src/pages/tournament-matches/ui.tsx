@@ -2,8 +2,9 @@ import { useCallback, useState } from "react";
 import { useParams } from "react-router-dom";
 import { groupApi } from "../../entities/group/api";
 import type { MatchStatus } from "../../entities/match/model";
+import { tournamentApi } from "../../entities/tournament/api";
 import { useQuery } from "../../shared/api/use-query";
-import { Empty, ErrorNotice, Loading } from "../../shared/ui";
+import { Empty, ErrorNotice, Loading, Logo } from "../../shared/ui";
 import { GroupMatches } from "../tournament-groups/matches";
 
 export function TournamentMatchesPage() {
@@ -15,14 +16,29 @@ export function TournamentMatchesPage() {
       [tournamentId],
     ),
   );
+  const tournamentQuery = useQuery(
+    useCallback(
+      (signal: AbortSignal) => tournamentApi.get(tournamentId, signal),
+      [tournamentId],
+    ),
+  );
 
   const groups = query.data?.slice().sort((a, b) => a.groupOrder - b.groupOrder) ?? [];
 
   return (
     <>
       <div className="list-heading">
-        <h2>Матчи турнира</h2>
+        <div className="admin-match-tournament-heading">
+          {tournamentQuery.data && (
+            <Logo name={tournamentQuery.data.name} url={tournamentQuery.data.logoUrl} />
+          )}
+          <div>
+            <h2>Матчи турнира</h2>
+            {tournamentQuery.data && <p className="muted">{tournamentQuery.data.name}</p>}
+          </div>
+        </div>
       </div>
+      <ErrorNotice error={tournamentQuery.error} retry={tournamentQuery.reload} />
       <label className="filter-label">
         Статус матча
         <select

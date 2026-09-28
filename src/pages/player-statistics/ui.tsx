@@ -1,4 +1,7 @@
 import { useEffect, useState } from "react";
+import { tournamentApi } from "../../entities/tournament/api";
+import type { Tournament } from "../../entities/tournament/model";
+import { allPages } from "../../shared/api/pagination";
 import { playerStatisticsApi, type PlayerStatisticsEventType, type PlayerStatisticsItem } from "../../entities/player/statistics-api";
 import { imageSrc } from "../../shared/api/images";
 import { Empty, ErrorNotice, Loading, PageHeading } from "../../shared/ui";
@@ -14,6 +17,10 @@ const eventTypes: { value: PlayerStatisticsEventType; label: string; countLabel:
 const PAGE_SIZE = 5;
 
 export function PlayerStatisticsPage() {
+  const [tournaments, setTournaments] = useState<Tournament[]>([]);
+  const [tournamentId, setTournamentId] = useState("");
+  const [tournamentsLoading, setTournamentsLoading] = useState(true);
+  const [tournamentsError, setTournamentsError] = useState<unknown>();
   const [type, setType] = useState<PlayerStatisticsEventType>("GOAL");
   const [page, setPage] = useState(0);
   const [players, setPlayers] = useState<PlayerStatisticsItem[]>([]);
@@ -25,9 +32,25 @@ export function PlayerStatisticsPage() {
 
   useEffect(() => {
     const controller = new AbortController();
+    setTournamentsLoading(true);
+    setTournamentsError(undefined);
+    allPages((page) => tournamentApi.list("", page, 100, controller.signal))
+      .then((result) => {
+        if (controller.signal.aborted) return;
+        setTournaments(result);
+        setTournamentId((current) => current || result[0]?.id || "");
+      })
+      .catch((reason) => { if (!controller.signal.aborted) setTournamentsError(reason); })
+      .finally(() => { if (!controller.signal.aborted) setTournamentsLoading(false); });
+    return () => controller.abort();
+  }, [revision]);
+
+  useEffect(() => {
+    if (!tournamentId) { setLoading(false); return; }
+    const controller = new AbortController();
     setLoading(true);
     setError(undefined);
-    playerStatisticsApi.list(type, page, PAGE_SIZE, controller.signal)
+    playerStatisticsApi.list(tournamentId, type, page, PAGE_SIZE, controller.signal)
       .then((result) => {
         if (controller.signal.aborted) return;
         setPlayers((current) => page === 0 ? result.content : [...current, ...result.content]);
@@ -42,7 +65,7 @@ export function PlayerStatisticsPage() {
         if (!controller.signal.aborted) setLoading(false);
       });
     return () => controller.abort();
-  }, [type, page, revision]);
+  }, [tournamentId, type, page, revision]);
 
   function changeType(nextType: PlayerStatisticsEventType) {
     setType(nextType);
@@ -53,6 +76,15 @@ export function PlayerStatisticsPage() {
 
   return (
     <section className="player-statistics-page">
+      <label className="filter-label">Турнир
+        <select value={tournamentId} disabled={tournamentsLoading || !tournaments.length} onChange={(event) => {
+          setTournamentId(event.target.value); setPage(0); setPlayers([]); setHasMore(false);
+        }}>
+          {!tournaments.length && <option value="">{tournamentsLoading ? 'Загрузка турниров…' : 'Нет турниров'}</option>}
+          {tournaments.map((tournament) => <option key={tournament.id} value={tournament.id}>{tournament.name}</option>)}
+        </select>
+      </label>
+      <ErrorNotice error={tournamentsError} retry={() => setRevision((current) => current + 1)} />
       <PageHeading title="Статистика игроков" description="Лидеры по событиям матчей" />
       <label className="filter-label">
         Тип события

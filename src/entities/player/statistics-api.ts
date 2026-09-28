@@ -29,9 +29,9 @@ export type PlayerStatisticsPage = {
 };
 
 export const playerStatisticsApi = {
-  list: (type: PlayerStatisticsEventType, page: number, size: number, signal?: AbortSignal) =>
+  list: (tournamentId: string, type: PlayerStatisticsEventType, page: number, size: number, signal?: AbortSignal) =>
     api<PlayerStatisticsPage>("/api/players/statistics", {
-      query: { type, page, size },
+      query: { tournamentId, type, page, size },
       signal,
     }),
 };
