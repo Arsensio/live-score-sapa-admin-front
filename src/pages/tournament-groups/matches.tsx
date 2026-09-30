@@ -6,7 +6,7 @@ import type { MatchStatus } from "../../entities/match/model";
 import { teamApi } from "../../entities/team/api";
 import type { Team } from "../../entities/team/model";
 import { useQuery } from "../../shared/api/use-query";
-import { ErrorNotice, Loading, Logo } from "../../shared/ui";
+import { Confirm, ErrorNotice, Loading, Logo } from "../../shared/ui";
 
 function localDateTimeValue() {
   const date = new Date();
@@ -42,6 +42,7 @@ export function GroupMatches({
   const [createOpen, setCreateOpen] = useState(false);
   const [saving, setSaving] = useState(false);
   const [startingMatchId, setStartingMatchId] = useState<string | null>(null);
+  const [confirmStartMatchId, setConfirmStartMatchId] = useState<string | null>(null);
   const [actionError, setActionError] = useState<unknown>();
   const [createError, setCreateError] = useState<unknown>();
   const [teams, setTeams] = useState<Team[]>([]);
@@ -118,6 +119,7 @@ export function GroupMatches({
     setActionError(undefined);
     try {
       await matchApi.start(matchId);
+      setConfirmStartMatchId(null);
       navigate(`/matches/${encodeURIComponent(matchId)}`);
     } catch (error) {
       setActionError(error);
@@ -167,23 +169,31 @@ export function GroupMatches({
                   />
                 </span>
               </div>
+              {match.homePenaltyScore != null && match.awayPenaltyScore != null && (
+                <p className="match-penalty-score">Пенальти: {match.homePenaltyScore} : {match.awayPenaltyScore}</p>
+              )}
               {match.status === "CREATED" ? (
-                <button
-                  type="button"
-                  className="button primary full-width match-start-button"
-                  disabled={startingMatchId !== null}
-                  onClick={() => void startMatch(match.id)}
-                >
-                  {startingMatchId === match.id ? "Запускаем…" : "СТАРТ"}
-                </button>
-              ) : match.status === "LIVE" ? (
+                <>
+                  <Link className="button secondary full-width match-start-button" to={`/matches/${encodeURIComponent(match.id)}`}>
+                    Открыть матч
+                  </Link>
+                  <button
+                    type="button"
+                    className="button primary full-width match-start-button"
+                    disabled={startingMatchId !== null}
+                  onClick={() => { setActionError(undefined); setConfirmStartMatchId(match.id); }}
+                  >
+                    {startingMatchId === match.id ? "Запускаем…" : "СТАРТ"}
+                  </button>
+                </>
+              ) : match.status === "LIVE" || match.status === "PENALTY_SHOOTOUT" ? (
                 <Link className="button match-manage-button full-width match-start-button" to={`/matches/${encodeURIComponent(match.id)}`}>
                   Управлять матчем
                 </Link>
               ) : (
-                <button type="button" className="button secondary" disabled>
-                  Управлять матчем
-                </button>
+                <Link className="button secondary full-width match-start-button" to={`/matches/${encodeURIComponent(match.id)}`}>
+                  Открыть матч
+                </Link>
               )}
             </li>
           ))}
@@ -192,6 +202,20 @@ export function GroupMatches({
         <p className="muted group-matches-empty">Матчей пока нет.</p>
       )}
 
+      {confirmStartMatchId && (
+        <Confirm
+          title="Начать матч?"
+          busy={startingMatchId !== null}
+          tone="primary"
+          confirmLabel="Да, начать матч"
+          busyLabel="Запускаем…"
+          onClose={() => setConfirmStartMatchId(null)}
+          onConfirm={() => void startMatch(confirmStartMatchId)}
+        >
+          <p>Вы уверены, что хотите начать матч?</p>
+          <ErrorNotice error={actionError} />
+        </Confirm>
+      )}
       {createOpen && (
         <dialog
           ref={dialogRef}

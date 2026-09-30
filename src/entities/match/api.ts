@@ -16,6 +16,8 @@ export const matchApi = {
     }),
   create: (body: CreateMatchInput) =>
     api<Match>("/api/matches", { method: "POST", body }),
+  update: (matchId: string, body: CreateMatchInput) =>
+    api<Match>(`/api/matches/${encodeURIComponent(matchId)}`, { method: "PUT", body }),
   start: (matchId: string) =>
     api<void>(`/api/matches/${encodeURIComponent(matchId)}/action`, {
       method: "PATCH",
@@ -25,5 +27,10 @@ export const matchApi = {
     api<void>(`/api/matches/${encodeURIComponent(matchId)}/action`, {
       method: "PATCH",
       query: { action: "FINISH" },
+    }),
+  startShootout: (matchId: string) =>
+    api<void>(`/api/matches/${encodeURIComponent(matchId)}/action`, {
+      method: "PATCH",
+      query: { action: "START_PENALTY_SHOOTOUT" },
     }),
 };

@@ -5,12 +5,14 @@ export type MatchEventInput = {
   matchId: string;
   teamId: string;
   playerId: string | null;
-  assistPlayerId?: string;
+  assistPlayerId?: string | null;
   type: MatchEventType;
-  minute: number;
+  minute: number | null;
 };
 
 export const matchEventApi = {
+  delete: (eventId: string) =>
+    api<void>(`/api/events/${encodeURIComponent(eventId)}`, { method: "DELETE" }),
   create: (body: MatchEventInput) =>
     api<MatchEvent>("/api/events", { method: "POST", body }),
   update: (eventId: string, body: MatchEventInput) =>

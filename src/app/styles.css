@@ -1505,6 +1505,42 @@ summary {
   max-width: 420px;
   margin: 18px auto 0;
 }
+.match-details-actions {
+  display: grid;
+  gap: 10px;
+  max-width: 420px;
+  margin: 18px auto 0;
+}
+.match-penalty-score {
+  text-align: center;
+  font-weight: 700;
+  color: #245b41;
+}
+.match-winner {
+  background: #edf7ed;
+  border-radius: 12px;
+  padding: 8px;
+}
+.match-shootout-events {
+  margin-top: 24px;
+  border-top: 1px solid #edf1e8;
+  padding-top: 16px;
+}
+.match-shootout-event {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 12px;
+  padding: 12px 0;
+}
+.match-shootout-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-left: auto;
+}
+.shootout-goal { color: #245b41; font-size: 24px; }
+.shootout-miss { color: #b42318; font-size: 24px; }
 .match-events-card .list-heading {
   margin-bottom: 14px;
 }

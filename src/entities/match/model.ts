@@ -1,5 +1,8 @@
-export type MatchStatus = "CREATED" | "LIVE" | "FINISHED";
-export type MatchEventType = "GOAL" | "OWN_GOAL" | "YELLOW_CARD" | "RED_CARD";
+export type MatchStatus = "CREATED" | "LIVE" | "PENALTY_SHOOTOUT" | "FINISHED" | "CANCELLED";
+export type MatchEventType = "GOAL" | "OWN_GOAL" | "YELLOW_CARD" | "RED_CARD" | "SHOOTOUT_GOAL" | "SHOOTOUT_MISS";
+
+export const isShootoutEvent = (event: { type: MatchEventType }) =>
+  event.type === "SHOOTOUT_GOAL" || event.type === "SHOOTOUT_MISS";
 
 export type MatchEvent = {
   id: string;
@@ -9,7 +12,7 @@ export type MatchEvent = {
   assistPlayerId?: string | null;
   linkedEventId?: string | null;
   type: MatchEventType;
-  minute: number;
+  minute: number | null;
   createdAt: string;
   updatedAt: string;
 };
@@ -31,6 +34,10 @@ export type Match = {
   team2?: MatchTeam | null;
   homeScore: number;
   awayScore: number;
+  isPlayOff?: boolean;
+  homePenaltyScore?: number | null;
+  awayPenaltyScore?: number | null;
+  winnerTeamId?: string | null;
   status: MatchStatus;
   scheduledAt: string;
   liveUrl?: string | null;

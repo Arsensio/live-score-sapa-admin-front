@@ -48,7 +48,9 @@ export function TournamentMatchesPage() {
           <option value="">Все статусы</option>
           <option value="CREATED">Создан</option>
           <option value="LIVE">В эфире</option>
+          <option value="PENALTY_SHOOTOUT">Серия пенальти</option>
           <option value="FINISHED">Завершён</option>
+          <option value="CANCELLED">Отменён</option>
         </select>
       </label>
       <ErrorNotice error={query.error} retry={query.reload} />
