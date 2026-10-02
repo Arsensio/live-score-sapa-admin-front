@@ -82,12 +82,14 @@ export function TournamentPage() {
           </span>
         </div>
       </section>
-      <nav className="tabs" aria-label="Разделы турнира">
+      <nav className="tabs tournament-tabs" aria-label="Разделы турнира">
         <NavLink to="matches"><Trophy size={15} /> Матчи</NavLink>
         <NavLink to="teams">Команды</NavLink>
         <NavLink to="groups">Группы</NavLink>
         <NavLink to="draw">Жеребьевка</NavLink>
         <NavLink to="player-statistics"><BarChart3 size={15} /> Статистика игроков</NavLink>
+        <NavLink to="player-award-polls">Голосование за игрока</NavLink>
+        <NavLink to="match-poll-leaderboard">Рейтинг прогнозов</NavLink>
       </nav>
       <Outlet context={{ tournament }} />
     </>

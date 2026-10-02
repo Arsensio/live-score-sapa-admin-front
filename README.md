@@ -54,6 +54,12 @@ VITE_GOOGLE_CLIENT_ID=<Google OAuth Client ID>
 
 ## API и допущения
 
+Вкладка «Голосование за игрока» находится внутри турнира рядом со статистикой игроков и открывает `/tournaments/:tournamentId/player-award-polls/new`. После создания открывается `/tournaments/:tournamentId/player-award-polls/:pollId`; эту ссылку можно сохранить для последующего управления. API списка всех голосований отсутствует. Футболисты запрашиваются с query-параметром `tournamentId` текущего турнира.
+
+Футболисты загружаются постранично через `GET /api/players`; выбор сохраняется по ID при поиске и смене страниц. Открытое голосование обновляется каждые 10 секунд только в видимой вкладке. Закрытие требует подтверждения и останавливает автообновление после загрузки окончательных результатов.
+
+Для работы требуется обновлённый gateway с точными маршрутами POST `/api/player-award-polls`, GET `/api/player-award-polls/{pollId}`, PATCH `/api/player-award-polls/{pollId}/action` и GET `/api/player-award-polls/{pollId}/results`. Универсальный маршрут `/api/player-award-polls/**` не используется: `/ballot` сохраняет подстановку userId из токена.
+
 Реализованы все endpoints из ТЗ: `GET/POST /api/tournaments`, `GET/POST /api/teams`, `GET /api/groups/filter`, `POST /api/draw/teams`, `DELETE /api/draw/groups/{groupId}/teams`, `GET /api/teams/admin/groups/{groupId}`.
 
 **Нужно подтвердить:** для просмотра и редактирования предполагаются `GET /api/tournaments/{id}` и `PUT /api/tournaments/{id}`. Они отсутствуют в ТЗ. Меняются в `src/entities/tournament/api.ts`.

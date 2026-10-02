@@ -16,6 +16,10 @@ import { GroupPage } from "../pages/group/ui";
 import { DrawPage } from "../pages/draw/ui";
 import { MatchPage } from "../pages/match/ui";
 import { PlayerStatisticsPage } from "../pages/player-statistics/ui";
+import { CreatePlayerAwardPage } from "../pages/player-awards/create";
+import { PlayerAwardPollsPage } from "../pages/player-awards/list";
+import { MatchPollLeaderboardPage } from "../pages/match-poll-leaderboard/ui";
+import { PlayerAwardDetailsPage } from "../pages/player-awards/details";
 import { ErrorNotice, PageHeading } from "../shared/ui";
 import { useAuth } from "../shared/auth/auth-context";
 import { LoginPage } from "../pages/login/ui";
@@ -48,6 +52,7 @@ export const router = createBrowserRouter([
     children: [
       { path: "/", element: <Navigate to="/tournaments" replace /> },
       { path: "/tournaments", element: <TournamentsPage /> },
+      { path: "/player-award-polls/:pollId", element: <PlayerAwardDetailsPage /> },
       { path: "/matches/:matchId", element: <MatchPage /> },
       { path: "/tournaments/new", element: <TournamentFormPage /> },
       {
@@ -76,6 +81,10 @@ export const router = createBrowserRouter([
           { path: "matches", element: <TournamentMatchesPage /> },
           { path: "draw", element: <DrawPage /> },
           { path: "player-statistics", element: <PlayerStatisticsPage /> },
+          { path: "player-award-polls", element: <PlayerAwardPollsPage /> },
+          { path: "match-poll-leaderboard", element: <MatchPollLeaderboardPage /> },
+          { path: "player-award-polls/new", element: <CreatePlayerAwardPage /> },
+          { path: "player-award-polls/:pollId", element: <PlayerAwardDetailsPage /> },
           { path: "draw/:groupId", element: <DrawPage /> },
         ],
       },

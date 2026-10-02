@@ -818,6 +818,23 @@ fieldset:disabled {
   border-bottom: 1px solid #dfe7d8;
   margin: 23px 0;
 }
+.tournament-tabs {
+  flex-wrap: nowrap;
+  max-width: 100%;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+}
+.tournament-tabs > a {
+  flex: 0 0 auto;
+  white-space: nowrap;
+  padding: 0 16px;
+  margin-bottom: 0;
+}
+.leaderboard-scroll { overflow-x: auto; }
+.leaderboard-table { width: 100%; border-collapse: collapse; }
+.leaderboard-table th, .leaderboard-table td { padding: 14px 16px; text-align: left; border-bottom: 1px solid #edf1e8; }
+.leaderboard-table tbody th { font-weight: 400; overflow-wrap: anywhere; }
+.leaderboard-user { display: grid; gap: 4px; }
 .tabs > a {
   flex: 1;
   min-height: 48px;
@@ -1541,6 +1558,27 @@ summary {
 }
 .shootout-goal { color: #245b41; font-size: 24px; }
 .shootout-miss { color: #b42318; font-size: 24px; }
+.award-page { display: grid; gap: 20px; }
+.award-form { padding: 24px; display: grid; gap: 16px; }
+.award-fields { border: 0; padding: 0; margin: 0; min-width: 0; display: grid; gap: 16px; }
+.award-search { display: flex; flex-wrap: wrap; align-items: end; gap: 12px; }
+.award-search .field { flex: 1; min-width: 200px; }
+.award-player-list { list-style: none; padding: 0; margin: 0; display: grid; gap: 8px; }
+.award-select-player, .award-candidate { display: flex; align-items: center; gap: 16px; padding: 12px; border: 1px solid #edf1e8; border-radius: 10px; }
+.award-select-player input { width: 20px; height: 20px; flex-shrink: 0; }
+.award-select-player { cursor: pointer; }
+.award-player { display: inline-flex; align-items: center; gap: 12px; }
+.award-photo { position: relative; width: 44px; height: 44px; flex-shrink: 0; border-radius: 50%; overflow: hidden; background: #edf1e8; display: grid; place-items: center; }
+.award-photo img { position: absolute; width: 100%; height: 100%; object-fit: cover; }
+.award-selected, .award-pagination { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
+.award-table-scroll { overflow-x: auto; }
+.award-results { width: 100%; border-collapse: collapse; }
+.award-results th, .award-results td { padding: 12px; text-align: left; border-bottom: 1px solid #edf1e8; }
+@media (max-width: 600px) {
+  .award-form { padding: 16px; }
+  .award-candidate { flex-wrap: wrap; }
+  .award-results { min-width: 620px; }
+}
 .match-events-card .list-heading {
   margin-bottom: 14px;
 }
